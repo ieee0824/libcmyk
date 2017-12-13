@@ -11,14 +11,9 @@ import (
 )
 
 func main() {
-	nf := flag.String("n", "nn.json", "")
 	f := flag.String("f", "", "")
 	flag.Parse()
 
-	c, err := libcmyk.NewConverter(*nf)
-	if err != nil {
-		log.Fatalln(err)
-	}
 	imageFile, err := os.Open(*f)
 	if err != nil {
 		log.Fatalln(err)
@@ -39,7 +34,7 @@ func main() {
 			if !ok {
 				log.Fatalln("not cmyk image")
 			}
-			rgb, err := c.CMYK2RGBA(&cmyk)
+			rgb, err := libcmyk.CMYK2RGBA(&cmyk)
 			if err != nil {
 				log.Fatalln(err)
 			}

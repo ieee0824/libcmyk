@@ -77,6 +77,7 @@ func Dump(name string) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 	if err := json.NewEncoder(f).Encode(d); err != nil {
 		return err
 	}
@@ -165,9 +166,9 @@ func BackPropagate(targets [4]float64, lRate, mFactor float64) (float64, error) 
 	var outputDeltas [NOutputs]float64
 	buffer := [4]float64{}
 	copy(buffer[:], targets[:])
-	sse2.DIVPDm128float64(buffer[:], OutputActivations[:])
+	sse2.SUBPDm128float64(buffer[:], OutputActivations[:])
 	sse2.MULPDm128float64(buffer[:], OutputActivations[:])
-	sse2.DIVPDm128float64(buffer[2:], OutputActivations[2:])
+	sse2.SUBPDm128float64(buffer[2:], OutputActivations[2:])
 	sse2.MULPDm128float64(buffer[2:], OutputActivations[2:])
 	mdsigresult := mdsigmoid(buffer)
 	copy(outputDeltas[:], mdsigresult[:])

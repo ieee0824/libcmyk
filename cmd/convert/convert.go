@@ -9,12 +9,18 @@ import (
 	"image/color"
 	"image"
 	"path/filepath"
+	"github.com/ieee0824/libcmyk/nn"
 )
 
 func main(){
 	src := flag.String("src", "", "")
 	dst := flag.String("dsg", "conv.jpeg", "")
+	networkFile := flag.String("n", "network.json", "")
 	flag.Parse()
+
+	if err := nn.Restore(*networkFile); err != nil {
+		log.Fatalln(err)
+	}
 
 	pwd, err := os.Getwd()
 	if err != nil {

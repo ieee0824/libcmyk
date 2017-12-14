@@ -3,12 +3,14 @@ package nn
 import (
 	"errors"
 	"fmt"
-	"math"
+	"os"
+	"encoding/json"
+	"github.com/mengzhuo/intrinsic/sse2"
 )
 
 const (
 	NInputs = 4 + 1
-	NHiddens = 12
+	NHiddens = 5
 	NOutputs = 3
 )
 
@@ -23,6 +25,65 @@ var (
 	Contexts [][NHiddens]float64
 	Regression bool
 )
+
+type dumpper struct {
+	InputActivations [NInputs]float64
+	HiddenActivations [NHiddens]float64
+	OutputActivations [NOutputs] float64
+	InputWeights [NInputs][NHiddens] float64
+	OutputWeights [NHiddens][NOutputs] float64
+	InputChanges [NInputs][NHiddens]float64
+	OutputChanges [NHiddens][NOutputs]float64
+	Contexts [][NHiddens]float64
+	Regression bool
+}
+
+func Restore(name string) error {
+	r := dumpper{}
+	f, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	if err := json.NewDecoder(f).Decode(&r); err != nil {
+		return err
+	}
+
+	InputActivations = r.InputActivations
+	HiddenActivations = r.HiddenActivations
+	OutputActivations = r.OutputActivations
+	InputWeights = r.InputWeights
+	OutputWeights = r.OutputWeights
+	InputChanges = r.InputChanges
+	OutputChanges = r.OutputChanges
+	Contexts = r.Contexts
+	Regression = r.Regression
+
+	return nil
+}
+
+func Dump(name string) error {
+	d := dumpper{
+		InputActivations,
+		HiddenActivations,
+		OutputActivations,
+		InputWeights,
+		OutputWeights,
+		InputChanges,
+		OutputChanges,
+		Contexts,
+		Regression,
+	}
+	f, err := os.Create(name)
+	if err != nil {
+		return err
+	}
+	if err := json.NewEncoder(f).Encode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+
 
 func Init() {
 	for i := 0; i < NInputs; i++ {
@@ -59,9 +120,12 @@ func Update(inputs [4]float64) ([NOutputs]float64, error) {
 		return [NOutputs]float64{}, errors.New("Error: wrong number of inputs")
 	}
 
+	/*
 	for i := 0; i < NInputs-1; i++ {
 		InputActivations[i] = inputs[i]
 	}
+	*/
+	copy(InputActivations[:], inputs[:])
 
 	for i := 0; i < NHiddens-1; i++ {
 		var sum float64
@@ -134,9 +198,20 @@ func BackPropagate(targets [4]float64, lRate, mFactor float64) (float64, error) 
 	}
 
 	var e float64
+	bufX := make([]float64, 4)
+	bufY := make([]float64, 4)
+	copy(bufX, targets[:])
+	sse2.SUBPDm128float64(bufX, OutputActivations[:])
+	sse2.SUBPDm128float64(bufX[2:], OutputActivations[2:])
 
-	for i := 0; i < len(targets); i++ {
-		e += 0.5 * math.Pow(targets[i]-OutputActivations[i], 2)
+	copy(bufY, bufX)
+	sse2.MULPDm128float64(bufX, bufY)
+	sse2.MULPDm128float64(bufX[2:], bufY[2:])
+	sse2.MULPDm128float64(bufX, []float64{0,5, 0.5})
+	sse2.MULPDm128float64(bufX[2:], []float64{0,5, 0.5})
+
+	for i := 0; i < len(bufX); i ++ {
+		e += bufX[i]
 	}
 
 	return e, nil

@@ -14,6 +14,7 @@ import (
 func main(){
 	src := flag.String("src", "", "")
 	dst := flag.String("dsg", "conv.jpeg", "")
+	networkFile := flag.String("n", "network.json", "")
 	flag.Parse()
 
 	pwd, err := os.Getwd()
@@ -43,11 +44,12 @@ func main(){
 	}
 
 	newImg := image.NewRGBA(img.Bounds())
+	converter := libcmyk.New(*networkFile)
 
 	for y := 0; y < h; y ++ {
 		for x := 0; x < w; x ++ {
 			c := img.At(x, y).(color.CMYK)
-			rgba, err := libcmyk.CMYK2RGBA(&c)
+			rgba, err := converter.CMYK2RGBA(&c)
 			if err != nil {
 				log.Fatalln(err)
 			}

@@ -45,7 +45,7 @@ func dismantleImage(cmykImg image.Image, ycbcrImg image.Image) (io.Reader, error
 	return buffer, nil
 }
 
-func train(r io.Reader) error {
+func train(ff *nn.FeedForward, r io.Reader) error {
 	buffer := make([]byte, 7)
 	for {
 		i, err := r.Read(buffer)
@@ -54,24 +54,23 @@ func train(r io.Reader) error {
 		} else if i != 7 {
 			return nil
 		}
-		patterns := [][2][4]float64{
+		patterns := [][][]float64{
 			{
-				[4]float64{
+				[]float64{
 					float64(buffer[0])/float64(0xff),
 					float64(buffer[1])/float64(0xff),
 					float64(buffer[2])/float64(0xff),
 					float64(buffer[3])/float64(0xff),
 				},
-				[4]float64{
+				[]float64{
 					float64(buffer[4])/float64(0xff),
 					float64(buffer[5])/float64(0xff),
 					float64(buffer[6])/float64(0xff),
-					1.0,
 				},
 			},
 		}
 
-		nn.Train(patterns, 10, 0.6, 0.4, true)
+		ff.Train(patterns, 10, 0.6, 0.4, true)
 	}
 	return nil
 }
@@ -106,7 +105,8 @@ func main() {
 	cmykDir := flag.String("cmyk", "", "cmyk img dir")
 	output := flag.String("f", "network.json", "network dump")
 	flag.Parse()
-	nn.Init()
+	ff := &nn.FeedForward{}
+	ff.Init(4, 5, 3)
 
 	rgbFiles, err := getImgPaths(*rgbDir)
 	if err != nil {
@@ -146,12 +146,12 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		if err := train(reader); err != nil {
+		if err := train(ff, reader); err != nil {
 			log.Fatalln(err)
 		}
 	}
 
-	if err := nn.Dump(*output); err != nil {
+	if err := ff.Dump(*output); err != nil {
 		log.Fatalln(err)
 	}
 }

@@ -5,15 +5,26 @@ import (
 	"github.com/ieee0824/libcmyk/nn"
 )
 
+type Converter struct {
+	ff *nn.FeedForward
+}
 
-func CMYK2RGBA(cmyk *color.CMYK) (*color.RGBA, error) {
-	inputs := [4]float64{
+func New(name string) *Converter {
+	ff, err := nn.Load(name)
+	if err != nil {
+		return nil
+	}
+	return &Converter{ff}
+}
+
+func (c *Converter)CMYK2RGBA(cmyk *color.CMYK) (*color.RGBA, error) {
+	inputs := []float64{
 		float64(cmyk.C)/0xff,
 		float64(cmyk.M)/0xff,
 		float64(cmyk.Y)/0xff,
 		float64(cmyk.K)/0xff,
 	}
-	result, err := nn.Update(inputs)
+	result, err := c.ff.Update(inputs)
 	if err != nil {
 		return nil, err
 	}

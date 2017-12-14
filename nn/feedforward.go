@@ -11,7 +11,7 @@ import (
 const (
 	NInputs = 4 + 1
 	NHiddens = 5
-	NOutputs = 3
+	NOutputs = 4
 )
 
 var (
@@ -120,11 +120,6 @@ func Update(inputs [4]float64) ([NOutputs]float64, error) {
 		return [NOutputs]float64{}, errors.New("Error: wrong number of inputs")
 	}
 
-	/*
-	for i := 0; i < NInputs-1; i++ {
-		InputActivations[i] = inputs[i]
-	}
-	*/
 	copy(InputActivations[:], inputs[:])
 
 	for i := 0; i < NHiddens-1; i++ {
@@ -168,9 +163,14 @@ func BackPropagate(targets [4]float64, lRate, mFactor float64) (float64, error) 
 	}
 
 	var outputDeltas [NOutputs]float64
-	for i := 0; i < NOutputs; i++ {
-		outputDeltas[i] = dsigmoid(OutputActivations[i]) * (targets[i] - OutputActivations[i])
-	}
+	buffer := [4]float64{}
+	copy(buffer[:], targets[:])
+	sse2.DIVPDm128float64(buffer[:], OutputActivations[:])
+	sse2.MULPDm128float64(buffer[:], OutputActivations[:])
+	sse2.DIVPDm128float64(buffer[2:], OutputActivations[2:])
+	sse2.MULPDm128float64(buffer[2:], OutputActivations[2:])
+	mdsigresult := mdsigmoid(buffer)
+	copy(outputDeltas[:], mdsigresult[:])
 
 	var hiddenDeltas [NHiddens]float64
 	for i := 0; i < NHiddens; i++ {
@@ -200,6 +200,7 @@ func BackPropagate(targets [4]float64, lRate, mFactor float64) (float64, error) 
 	var e float64
 	bufX := make([]float64, 4)
 	bufY := make([]float64, 4)
+
 	copy(bufX, targets[:])
 	sse2.SUBPDm128float64(bufX, OutputActivations[:])
 	sse2.SUBPDm128float64(bufX[2:], OutputActivations[2:])
@@ -223,8 +224,9 @@ func Train(patterns [][2][4]float64, iterations int, lRate, mFactor float64, deb
 	for i := 0; i < iterations; i++ {
 		var e float64
 		for _, p := range patterns {
-			Update(p[0])
-
+			if _, err := Update(p[0]); err != nil {
+				return nil, err
+			}
 			tmp, err := BackPropagate(p[1], lRate, mFactor)
 			if err != nil {
 				return nil, err

@@ -6,27 +6,25 @@ import (
 )
 
 type Converter struct {
-	network *nn.FeedForward
+	ff *nn.FeedForward
 }
 
-func NewConverter(name string) (*Converter, error) {
-	ret := new(Converter)
-	n, err := nn.Load(name)
+func New(name string) *Converter {
+	ff, err := nn.Load(name)
 	if err != nil {
-		return nil, err
+		return nil
 	}
-	ret.network = n
-	return ret, nil
+	return &Converter{ff}
 }
 
-func (c *Converter) CMYK2RGBA(cmyk *color.CMYK) (*color.RGBA, error) {
+func (c *Converter)CMYK2RGBA(cmyk *color.CMYK) (*color.RGBA, error) {
 	inputs := []float64{
 		float64(cmyk.C)/0xff,
 		float64(cmyk.M)/0xff,
 		float64(cmyk.Y)/0xff,
 		float64(cmyk.K)/0xff,
 	}
-	result, err := c.network.Update(inputs)
+	result, err := c.ff.Update(inputs)
 	if err != nil {
 		return nil, err
 	}

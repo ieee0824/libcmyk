@@ -1,8 +1,8 @@
 package libcmyk
 
 import (
-	"image/color"
 	"github.com/ieee0824/libcmyk/nn"
+	"image/color"
 )
 
 type Converter struct {
@@ -17,12 +17,12 @@ func New(name string) (*Converter, error) {
 	return &Converter{ff}, nil
 }
 
-func (c *Converter)CMYK2RGBA(cmyk *color.CMYK) (*color.RGBA, error) {
+func (c *Converter) CMYK2RGBA(cmyk *color.CMYK) (*color.RGBA, error) {
 	inputs := []float64{
-		float64(cmyk.C)/0xff,
-		float64(cmyk.M)/0xff,
-		float64(cmyk.Y)/0xff,
-		float64(cmyk.K)/0xff,
+		float64(cmyk.C) / 0xff,
+		float64(cmyk.M) / 0xff,
+		float64(cmyk.Y) / 0xff,
+		float64(cmyk.K) / 0xff,
 	}
 	result, err := c.ff.Update(inputs)
 	if err != nil {

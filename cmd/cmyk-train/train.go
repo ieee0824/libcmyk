@@ -1,20 +1,20 @@
 package main
 
 import (
-	"image"
 	"bytes"
-	"io"
-	"image/color"
 	"errors"
 	"flag"
-	"os"
-	"log"
-	"image/jpeg"
+	"fmt"
 	"github.com/ieee0824/libcmyk/nn"
+	"image"
+	"image/color"
+	"image/jpeg"
+	"io"
 	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
 	"strings"
-	"fmt"
 )
 
 func dismantleImage(cmykImg image.Image, ycbcrImg image.Image) (io.Reader, error) {
@@ -22,8 +22,8 @@ func dismantleImage(cmykImg image.Image, ycbcrImg image.Image) (io.Reader, error
 	w := cmykImg.Bounds().Max.X
 	h := cmykImg.Bounds().Max.Y
 
-	for y := 0; y < h; y ++ {
-		for x := 0; x < w; x ++ {
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
 			cmykPix := cmykImg.At(x, y)
 			cmyk, ok := cmykPix.(color.CMYK)
 			if !ok {
@@ -57,15 +57,15 @@ func train(ff *nn.FeedForward, r io.Reader) error {
 		patterns := [][][]float64{
 			{
 				[]float64{
-					float64(buffer[0])/float64(0xff),
-					float64(buffer[1])/float64(0xff),
-					float64(buffer[2])/float64(0xff),
-					float64(buffer[3])/float64(0xff),
+					float64(buffer[0]) / float64(0xff),
+					float64(buffer[1]) / float64(0xff),
+					float64(buffer[2]) / float64(0xff),
+					float64(buffer[3]) / float64(0xff),
 				},
 				[]float64{
-					float64(buffer[4])/float64(0xff),
-					float64(buffer[5])/float64(0xff),
-					float64(buffer[6])/float64(0xff),
+					float64(buffer[4]) / float64(0xff),
+					float64(buffer[5]) / float64(0xff),
+					float64(buffer[6]) / float64(0xff),
 				},
 			},
 		}
@@ -121,7 +121,7 @@ func main() {
 		log.Fatalln("There is no number of files.")
 	}
 
-	for i := 0; i < len(rgbFiles); i ++ {
+	for i := 0; i < len(rgbFiles); i++ {
 		rgbf, err := os.Open(rgbFiles[i])
 		if err != nil {
 			log.Fatalln(err)

@@ -9,12 +9,12 @@ type Converter struct {
 	ff *nn.FeedForward
 }
 
-func New(name string) *Converter {
+func New(name string) (*Converter, error) {
 	ff, err := nn.Load(name)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &Converter{ff}
+	return &Converter{ff}, nil
 }
 
 func (c *Converter)CMYK2RGBA(cmyk *color.CMYK) (*color.RGBA, error) {

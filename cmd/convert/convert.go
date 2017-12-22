@@ -3,15 +3,15 @@ package main
 import (
 	"flag"
 	"github.com/ieee0824/libcmyk"
-	"os"
-	"log"
-	"image/jpeg"
-	"image/color"
 	"image"
+	"image/color"
+	"image/jpeg"
+	"log"
+	"os"
 	"path/filepath"
 )
 
-func main(){
+func main() {
 	src := flag.String("src", "", "")
 	dst := flag.String("dsg", "conv.jpeg", "")
 	networkFile := flag.String("n", "network.json", "")
@@ -22,7 +22,7 @@ func main(){
 		log.Fatalln(err)
 	}
 
-	path := pwd+ "/" + *src
+	path := pwd + "/" + *src
 
 	f, err := os.Open(filepath.Clean(path))
 	if err != nil {
@@ -46,8 +46,8 @@ func main(){
 	newImg := image.NewRGBA(img.Bounds())
 	converter := libcmyk.New(*networkFile)
 
-	for y := 0; y < h; y ++ {
-		for x := 0; x < w; x ++ {
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
 			c := img.At(x, y).(color.CMYK)
 			rgba, err := converter.CMYK2RGBA(&c)
 			if err != nil {

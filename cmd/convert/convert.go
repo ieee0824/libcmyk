@@ -44,7 +44,10 @@ func main() {
 	}
 
 	newImg := image.NewRGBA(img.Bounds())
-	converter := libcmyk.New(*networkFile)
+	converter, err := libcmyk.New(*networkFile)
+	if err != nil {
+		panic(err)
+	}
 
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {

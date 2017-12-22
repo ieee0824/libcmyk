@@ -105,8 +105,16 @@ func main() {
 	cmykDir := flag.String("cmyk", "", "cmyk img dir")
 	output := flag.String("f", "network.json", "network dump")
 	flag.Parse()
-	ff := &nn.FeedForward{}
-	ff.Init(4, 5, 3)
+
+	ff, err := nn.Load(*output)
+	if err != nil {
+		fmt.Println("new nn")
+		ff = &nn.FeedForward{}
+		ff.Init(4, 20, 3)
+	} else {
+		fmt.Println("update nn")
+	}
+
 
 	rgbFiles, err := getImgPaths(*rgbDir)
 	if err != nil {
